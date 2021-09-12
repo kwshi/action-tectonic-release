@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
-
 shopt -s nullglob dotglob extglob globstar
 
-readarray -t patterns <<< "$2"
+declare GITHUB_TOKEN="$1" PATTERNS="$2"
 
+readarray -t patterns <<< "$PATTERNS"
 for pattern in "${patterns[@]}"; do
   # shellcheck disable=SC2206
   IFS= paths=($pattern)
@@ -19,22 +19,24 @@ done
 
 echo '::group::Creating release'
 
-curl=(
-  curl -fsS
-  -H "Authorization: Bearer $1"
-  -H 'Accept: application/vnd.github.v3+json'
-)
+function api {
+  local path="$1"
+  shift
+  curl -fsS \
+    -H "Authorization: Bearer $GITHUB_TOKEN" \
+    -H 'Accept: application/vnd.github.v3+json' \
+    "$@" "https://api.github.com/repos/$GITHUB_REPOSITORY/$path"
+}
 
-echo 'deleting'
-"${curl[@]}" -X 'DELETE' \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/latest"
+echo 'deleting existing release'
+if read -r url < <(api 'releases/tags/latest' | jq -rc '.url'); do
+  api "$url" -X 'DELETE'
+done
 
-echo 'creating'
-"${curl[@]}" -d '{"tag_name": "latest"}' \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+echo 'creating new release'
+api 'releases' -d '{"tag_name": "latest"}'
 
-echo 'uploading'
-"${curl[@]}" \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/latest/assets"
+#echo 'uploading'
+#api 'releases/assets"
 
 echo '::endgroup::'
