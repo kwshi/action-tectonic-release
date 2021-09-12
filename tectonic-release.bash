@@ -14,5 +14,8 @@ for pattern in "${patterns[@]}"; do
   done
 done
 
-curl -fsS -H "Authorization: Bearer $1" \
+curl -fsS \
+  -H "Authorization: Bearer $1" \
+  -H 'Accept: application/vnd.github.v3+json' \
+  -d '{"tag_name": "latest"}' \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
