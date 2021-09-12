@@ -25,12 +25,15 @@ curl=(
   -H 'Accept: application/vnd.github.v3+json'
 )
 
+echo 'deleting'
 "${curl[@]}" -X 'DELETE' \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/latest"
 
+echo 'creating'
 "${curl[@]}" -d '{"tag_name": "latest"}' \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
 
+echo 'uploading'
 "${curl[@]}" \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/latest/assets"
 
