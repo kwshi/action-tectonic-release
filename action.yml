@@ -2,6 +2,9 @@ name: "tectonic-release"
 author: "kwshi"
 description: "Builds & releases LaTeX PDFs using Tectonic"
 inputs:
+  token:
+    description: "GitHub repository authentication token"
+    required: true
   paths:
     description: "Newline-separated list of glob-paths to LaTeX source files"
     required: true
@@ -9,4 +12,6 @@ runs:
   using: "docker"
   image: "Dockerfile"
   args:
+    - "${{ inputs.token }}"
+    - "${{ inputs.paths }}"
     - "${{ inputs.paths }}"
