@@ -3,4 +3,4 @@ set -euo pipefail
 
 echo hi
 
-echo "${@@Q}"
+echo "NUMBER OF ARGS: $#"
