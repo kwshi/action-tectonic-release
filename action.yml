@@ -1,0 +1,12 @@
+name: "tectonic-release"
+author: "kwshi"
+description: "Builds & releases LaTeX PDFs using Tectonic"
+inputs:
+  paths:
+    description: "Newline-separated list of glob-paths to LaTeX source files"
+    required: true
+runs:
+  using: "docker"
+  image: "Containerfile"
+  args:
+    - "${{ inputs.paths }}"
