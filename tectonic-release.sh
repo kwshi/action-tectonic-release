@@ -1,8 +1,7 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
 echo "$1" | \
-  while read -r pattern; do
+  while IFS= read -r pattern; do
     echo "PATTERN: $pattern"
   done
-exit 1
