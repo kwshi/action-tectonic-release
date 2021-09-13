@@ -28,12 +28,11 @@ function api {
     "$@" "https://api.github.com/repos/$GITHUB_REPOSITORY/$path"
 }
 
-set -x
 echo 'checking for existing release'
-if read -r url < <(api 'releases/tags/latest' | jq -rc '.url'); do
+if read -r url < <(api 'releases/tags/latest' | jq -rc '.url'); then
   echo 'existing release, deleting'
   api "$url" -X 'DELETE'
-done
+fi
 
 echo 'creating new release'
 api 'releases' -d '{"tag_name": "latest"}'
