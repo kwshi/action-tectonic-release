@@ -43,7 +43,7 @@ curl -v -fsS \
   -H 'Accept: application/vnd.github.v3+json' \
   -H 'Content-Type: text/plain' \
   --data-binary '@lgcs105.cls' \
-  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=lgcs105.cls"
+  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=lgcs105.cls"
 #api "releases/$id/assets?name=lgcs105cls" --data-binary '@lgcs105.cls'
 #api 'releases/assets"
 
