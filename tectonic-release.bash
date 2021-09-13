@@ -41,7 +41,7 @@ echo 'uploading release assets'
 curl -fsS \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H 'Accept: application/vnd.github.v3+json' \
-  --data-binary '@lgcs105.cls'
+  --data-binary '@lgcs105.cls' \
   "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=lgcs105cls"
 #api "releases/$id/assets?name=lgcs105cls" --data-binary '@lgcs105.cls'
 #api 'releases/assets"
