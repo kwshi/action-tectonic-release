@@ -30,9 +30,9 @@ function api {
 
 set -x
 echo 'checking for existing release'
-if read -r url < <(api 'releases/tags/latest' | jq -rc '.url'); then
+if read -r id < <(api 'releases/tags/latest' | jq -rc '.id'); then
   echo 'existing release, deleting'
-  api "$url" -X 'DELETE'
+  api "releases/$id" -X 'DELETE'
 fi
 
 echo 'creating new release'
