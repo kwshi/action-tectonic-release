@@ -28,8 +28,9 @@ function api {
     "$@" "https://api.github.com/repos/$GITHUB_REPOSITORY/$path"
 }
 
-echo 'deleting existing release'
+echo 'checking for existing release'
 if read -r url < <(api 'releases/tags/latest' | jq -rc '.url'); do
+  echo 'existing release, deleting'
   api "$url" -X 'DELETE'
 done
 
