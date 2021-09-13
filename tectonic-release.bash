@@ -45,6 +45,6 @@ echo 'uploading release assets'
 "${CURL[@]}" \
   -H 'Content-Type: text/plain' \
   --data-binary '@lgcs105.cls' \
-  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=lgcs105.cls&label=hello%2Ftest"
+  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=a/lgcs105.cls&label=hello/test"
 
 echo '::endgroup::'
