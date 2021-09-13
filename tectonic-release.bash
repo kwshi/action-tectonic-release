@@ -44,6 +44,8 @@ for path in "${paths[@]}"; do
   echo '::endgroup::'
 done
 
+set -x
+
 # setup release
 echo '::group::Creating release'
 if id="$("${CURL_API[@]}" "$API_URL/tags/$RELEASE" | jq -rc '.id')"; then
