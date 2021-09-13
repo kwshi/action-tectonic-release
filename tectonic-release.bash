@@ -28,7 +28,6 @@ function api {
     "$@" "https://api.github.com/repos/$GITHUB_REPOSITORY/$path"
 }
 
-set -x
 echo 'checking for existing release'
 if read -r id < <(api 'releases/tags/latest' | jq -rc '.id'); then
   echo 'existing release, deleting'
@@ -36,9 +35,10 @@ if read -r id < <(api 'releases/tags/latest' | jq -rc '.id'); then
 fi
 
 echo 'creating new release'
-api 'releases' -d '{"tag_name": "latest"}'
+read -r id < <(api 'releases' -d '{"tag_name": "latest"}' | jq -rc '.id')
 
-#echo 'uploading'
+echo 'uploading release assets'
+api "releases/$id/assets?name=lgcs105cls" --data-binary '@lgcs105.cls'
 #api 'releases/assets"
 
 echo '::endgroup::'
