@@ -38,7 +38,7 @@ echo 'creating new release'
 read -r id < <(api 'releases' -d '{"tag_name": "latest"}' | jq -rc '.id')
 
 echo 'uploading release assets'
-curl -fsS \
+curl -v -fsS \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H 'Accept: application/vnd.github.v3+json' \
   --data-binary '@lgcs105.cls' \
