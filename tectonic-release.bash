@@ -2,51 +2,65 @@
 set -euo pipefail
 shopt -s nullglob dotglob extglob globstar
 
-declare GITHUB_TOKEN="$1" PATTERNS="$2"
+# TODO: `RELEASE` and PDF filenames currently aren't percent-encoded in
+# queries; maybe they should be
+
+declare \
+  TOKEN="$1" \
+  RELEASE="$2" \
+  PATTERNS="$3" \
+  UPLOAD_URL="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases" \
+  API_URL="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+
 declare -a CURL_API=(
   curl -fsS
-  -H "Authorization: Bearer $GITHUB_TOKEN"
+  -H "Authorization: Bearer $TOKEN"
   -H 'Accept: application/vnd.github.v3+json'
 )
 
 declare -a patterns paths=()
-declare path pdf
+declare path pdf id data
 
+# glob source files
+echo '::group::Finding source files'
 readarray -t patterns <<< "$PATTERNS"
 for pattern in "${patterns[@]}"; do
   # shellcheck disable=SC2206
   IFS= paths+=($pattern)
 done
+for path in "${paths[@]}"; do
+  echo "$path"
+  if [[ ! -e "$path" ]]; then
+    echo "::error::No path matching ${path@Q}"
+    exit 1
+  fi
+done
+echo '::endgroup::'
 
+# compile pdfs
 for path in "${paths[@]}"; do
   echo "::group::Compiling ${path@Q}"
   tectonic -X -c 'minimal' compile "$path"
   echo '::endgroup::'
 done
 
+# setup release
 echo '::group::Creating release'
-if read -r id < <("${CURL_API[@]}" \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/latest" \
-  | jq -rc '.id'
-  ); then
-  echo 'existing release, deleting'
-  "${CURL_API[@]}" -X 'DELETE' \
-    "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/$id"
+if id="$("${CURL_API[@]}" "$API_URL/tags/$RELEASE" | jq -rc '.id')"; then
+  "${CURL_API[@]}" -X 'DELETE' "$API_URL/$id"
 fi
-read -r id < <("${CURL_API[@]}" -d '{"tag_name": "latest"}' \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" \
-  | jq -rc '.id'
-)
+data="$(jq -cn --arg 'tag' "$RELEASE" '{tag_name: $tag}')"
+id="$("${CURL_API[@]}" -d "$data" "$API_URL" | jq -rc '.id')"
 echo '::endgroup::'
 
+# upload pdfs
 echo '::group::Uploading release assets'
 for path in "${paths[@]}"; do
   pdf="${path%.*}.pdf"
-  name="${pdf//'/'/':'}"
-  echo "$path"
-  "${CURL_API[@]}" \
-    -H 'Content-Type: application/pdf' \
-    --data-binary "@$pdf" \
-    "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=$name&label=$pdf"
+  name="${pdf##*/}"
+  echo "$pdf"
+
+  "${CURL_API[@]}" -H 'Content-Type: application/pdf' --data-binary "@$pdf" \
+    "$UPLOAD_URL/$id/assets?name=$name&label=$pdf"
 done
 echo '::endgroup::'
