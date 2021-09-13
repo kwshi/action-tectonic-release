@@ -4,13 +4,13 @@ shopt -s nullglob dotglob extglob globstar
 
 declare \
   TOKEN="$1" \
-  RELEASE="$2" \
+  TAG="$2" \
   PATTERNS="$3" \
   UPLOAD_URL="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases" \
   API_URL="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
 
 declare -a CURL_API=(
-  curl -fsS
+  curl -fs
   -H "Authorization: Bearer $TOKEN"
   -H 'Accept: application/vnd.github.v3+json'
 )
@@ -53,18 +53,16 @@ for path in "${paths[@]}"; do
   echo '::endgroup::'
 done
 
-set -x
-
 # setup release
 echo '::group::Creating release'
 if id="$(
-  "${CURL_API[@]}" "$API_URL/tags/$(percent-encode "$RELEASE")" \
+  "${CURL_API[@]}" "$API_URL/tags/$(percent-encode "$TAG")" \
     | jq -rc '.id'
 )"; then
-  "${CURL_API[@]}" -X 'DELETE' "$API_URL/$id"
+  "${CURL_API[@]}" -S -X 'DELETE' "$API_URL/$id"
 fi
-data="$(jq -cn --arg 'tag' "$RELEASE" '{tag_name: $tag}')"
-id="$("${CURL_API[@]}" -d "$data" "$API_URL" | jq -rc '.id')"
+data="$(jq -cn --arg 'tag' "$TAG" '{tag_name: $tag}')"
+id="$("${CURL_API[@]}" -S -d "$data" "$API_URL" | jq -rc '.id')"
 echo '::endgroup::'
 
 # upload pdfs
@@ -74,7 +72,7 @@ for path in "${paths[@]}"; do
   name="${pdf##*/}"
   echo "$pdf"
 
-  "${CURL_API[@]}" -H 'Content-Type: application/pdf' --data-binary "@$pdf" \
+  "${CURL_API[@]}" -S -H 'Content-Type: application/pdf' --data-binary "@$pdf" \
     "$UPLOAD_URL/$id/assets?name=$(percent-encode "$name")&label=$(percent-encode "$pdf")"
 done
 echo '::endgroup::'
