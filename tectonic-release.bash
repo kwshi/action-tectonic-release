@@ -26,16 +26,18 @@ CURL=(
 )
 
 echo 'checking for existing release'
-if read -r id < <(api 'releases/tags/latest' | jq -rc '.id'); then
+if read -r id < <("${CURL[@]}" \
+  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/latest" \
+  | jq -rc '.id'
+  ); then
   echo 'existing release, deleting'
   "${CURL[@]}" -X 'DELETE' \
     "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/$id"
 fi
 
 echo 'creating new release'
-read -r id < <(
-  "${CURL[@]}" -d '{"tag_name": "latest"}'
-    "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+read -r id < <("${CURL[@]}" -d '{"tag_name": "latest"}' \
+  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" \
   | jq -rc '.id'
 )
 
