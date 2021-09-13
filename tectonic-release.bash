@@ -42,11 +42,11 @@ echo '::endgroup::'
 echo '::group::Uploading release assets'
 for path in "${paths[@]}"; do
   pdf="${path%.*}.pdf"
+  name="${pdf//'/'/':'}"
   echo "$path"
   "${CURL_API[@]}" \
     -H 'Content-Type: application/pdf' \
     --data-binary "@$pdf" \
-    "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=$pdf&label=$pdf"
-
+    "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=$name&label=$pdf"
 done
 echo '::endgroup::'
