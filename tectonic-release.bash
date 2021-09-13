@@ -16,7 +16,7 @@ declare -a CURL_API=(
 )
 
 declare -a patterns paths=()
-declare path pdf id data
+declare path pdf id data url
 
 function percent-encode {
   local encoded='' c
@@ -70,9 +70,18 @@ echo '::group::Uploading release assets'
 for path in "${paths[@]}"; do
   pdf="${path%.*}.pdf"
   name="${pdf##*/}"
-  echo "$pdf"
 
-  "${CURL_API[@]}" -S -H 'Content-Type: application/pdf' --data-binary "@$pdf" \
-    "$UPLOAD_URL/$id/assets?name=$(percent-encode "$name")&label=$(percent-encode "$pdf")"
+  url="$(
+    "${CURL_API[@]}" -S \
+      -H 'Content-Type: application/pdf' \
+      --data-binary "@$pdf" \
+      "$UPLOAD_URL/$id/assets?name=$(
+        percent-encode "$name"
+      )&label=$(
+        percent-encode "$pdf"
+      )" | jq -rc '.browser_download_url'
+  )"
+
+  echo "${pdf@Q}: $url"
 done
 echo '::endgroup::'
