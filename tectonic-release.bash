@@ -2,9 +2,6 @@
 set -euo pipefail
 shopt -s nullglob dotglob extglob globstar
 
-# TODO: `RELEASE` and PDF filenames currently aren't percent-encoded in
-# queries; maybe they should be
-
 declare \
   TOKEN="$1" \
   RELEASE="$2" \
@@ -20,6 +17,18 @@ declare -a CURL_API=(
 
 declare -a patterns paths=()
 declare path pdf id data
+
+function percent-encode {
+  local encoded='' c
+  for (( i=0; i<${#1}; ++i )); do
+    c="${1:i:1}"
+    case "$c" in
+      [0-9A-Za-z_.~-]) encoded="$encoded$c";;
+      *) printf -v encoded "%s%%%02x" "$encoded" "'$c";;
+    esac
+  done
+  echo "$encoded"
+}
 
 # glob source files
 echo '::group::Finding source files'
@@ -48,7 +57,10 @@ set -x
 
 # setup release
 echo '::group::Creating release'
-if id="$("${CURL_API[@]}" "$API_URL/tags/$RELEASE" | jq -rc '.id')"; then
+if id="$(
+  "${CURL_API[@]}" "$API_URL/tags/$(percent-encode "$RELEASE")" \
+    | jq -rc '.id'
+)"; then
   "${CURL_API[@]}" -X 'DELETE' "$API_URL/$id"
 fi
 data="$(jq -cn --arg 'tag' "$RELEASE" '{tag_name: $tag}')"
@@ -63,6 +75,6 @@ for path in "${paths[@]}"; do
   echo "$pdf"
 
   "${CURL_API[@]}" -H 'Content-Type: application/pdf' --data-binary "@$pdf" \
-    "$UPLOAD_URL/$id/assets?name=$name&label=$pdf"
+    "$UPLOAD_URL/$id/assets?name=$(percent-encode "$name")&label=$(percent-encode "$pdf")"
 done
 echo '::endgroup::'
